@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  emailVerified DateTime?
+  password      String
+  image         String?
+  reputation    Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  posts         Post[]
+  comments      Comment[]
+  votes         Vote[]
+  notifications Notification[]
+}
+
+model Post {
+  id        String    @id @default(cuid())
+  title     String
+  content   String
+  published Boolean   @default(true)
+  votes     Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments  Comment[]
+  postVotes Vote[]    @relation("PostVotes")
+
+  @@index([authorId])
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  content   String
+  votes     Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Comment?  @relation("CommentToComment", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentToComment")
+  commentVotes Vote[] @relation("CommentVotes")
+
+  @@index([authorId])
+  @@index([postId])
+  @@index([parentId])
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  type      String   // "up" or "down"
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String?
+  post      Post?    @relation("PostVotes", fields: [postId], references: [id], onDelete: Cascade)
+  commentId String?
+  comment   Comment? @relation("CommentVotes", fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@unique([userId, commentId])
+  @@index([userId])
+  @@index([postId])
+  @@index([commentId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   // "reply", "mention", "like"
+  content   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actorId   String?  // ID of the user who triggered the notification
+  postId    String?  // Related post ID if applicable
+  commentId String?  // Related comment ID if applicable
+
+  @@index([userId])
+  @@index([actorId])
+  @@index([postId])
+  @@index([commentId])
+}
+
