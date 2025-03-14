@@ -28,7 +28,6 @@ export async function getCurrentUser() {
         email: true,
         image: true,
         createdAt: true,
-        reputation: true,
       },
     })
 
@@ -45,12 +44,12 @@ export async function authenticateUser(email: string, password: string) {
     where: { email },
   })
 
-  if (!user) {
+  if (!user || !user.password) {
     return null
   }
 
   // Verify password
-  const passwordMatch = await compare(password, user.hashedPassword)
+  const passwordMatch = await compare(password, user.password)
   if (!passwordMatch) {
     return null
   }

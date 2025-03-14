@@ -34,12 +34,6 @@ export async function GET(req: Request) {
             image: true,
           },
         },
-        _count: {
-          select: {
-            comments: true,
-            postVotes: true,
-          },
-        },
       },
     })
 
@@ -47,9 +41,10 @@ export async function GET(req: Request) {
     const transformedPosts = posts.map((post) => ({
       ...post,
       _count: {
-        ...post._count,
-        likes: post._count.postVotes,
+        comments: 0,
+        likes: 0,
       },
+      votes: 0,
     }))
 
     const totalPosts = await prisma.post.count()
@@ -105,7 +100,20 @@ export async function POST(req: Request) {
       },
     })
 
-    return NextResponse.json({ message: "Post created successfully", post }, { status: 201 })
+    return NextResponse.json(
+      {
+        message: "Post created successfully",
+        post: {
+          ...post,
+          _count: {
+            comments: 0,
+            likes: 0,
+          },
+          votes: 0,
+        },
+      },
+      { status: 201 },
+    )
   } catch (error) {
     console.error("Error creating post:", error)
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 })

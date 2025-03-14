@@ -51,7 +51,7 @@ export async function POST(req: Request) {
       data: {
         name: username,
         email,
-        hashedPassword,
+        password: hashedPassword,
         image: `https://api.dicebear.com/7.x/initials/svg?seed=${username}`,
       },
     })
@@ -60,10 +60,13 @@ export async function POST(req: Request) {
     const token = generateAuthToken(user)
     setAuthCookie(token)
 
-    // Remove password from response
-    const { hashedPassword: _, ...userWithoutPassword } = user
-
-    return NextResponse.json({ message: "User created successfully", user: userWithoutPassword }, { status: 201 })
+    return NextResponse.json(
+      {
+        message: "User created successfully",
+        user: { id: user.id, name: user.name, email: user.email, image: user.image },
+      },
+      { status: 201 },
+    )
   } catch (error) {
     console.error("Error creating user:", error)
     return NextResponse.json(

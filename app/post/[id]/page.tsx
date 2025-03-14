@@ -4,8 +4,7 @@ import { formatDistanceToNow } from "date-fns"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { CommentSection } from "@/components/comment-section"
-import { VoteButtons } from "@/components/vote-buttons"
+import { Button } from "@/components/ui/button"
 import { getPostById } from "@/lib/data"
 
 interface PostPageProps {
@@ -56,44 +55,31 @@ export default async function PostPage({ params }: PostPageProps) {
           </div>
 
           <Card className="overflow-hidden p-6 border-none bg-white/80 backdrop-blur-md dark:bg-gray-950/80">
-            <div className="flex">
-              <VoteButtons
-                itemId={post.id}
-                itemType="post"
-                initialVotes={post.votes || 0}
-                initialVote={post.userVote}
-                className="mr-4"
-              />
-              <div
-                className="prose max-w-none dark:prose-invert"
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }}
-              />
+            <div className="prose max-w-none dark:prose-invert prose-headings:text-foreground">
+              {post.content.split("\n").map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
             </div>
           </Card>
 
           <Separator />
 
-          <CommentSection postId={post.id} comments={post.comments} />
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold tracking-tight">Comments</h2>
+
+            <div className="rounded-lg border border-dashed p-8 text-center">
+              <p className="text-muted-foreground mb-4">Comments are currently disabled.</p>
+              <Button
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                disabled
+              >
+                Comments coming soon
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   )
-}
-
-// Simple markdown renderer (same as in rich-text-editor.tsx)
-function renderMarkdown(text: string) {
-  const html = text
-    .replace(/```([\s\S]*?)```/g, "<pre><code>$1</code></pre>")
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.*?)\*/g, "<em>$1</em>")
-    .replace(/\[(.*?)\]$$(.*?)$$/g, '<a href="$2" class="text-primary underline">$1</a>')
-    .replace(/^\s*-\s+(.*?)$/gm, "<li>$1</li>")
-    .replace(/<li>.*?<\/li>/gs, '<ul class="list-disc pl-6">$&</ul>')
-    .replace(/^\s*\d+\.\s+(.*?)$/gm, "<li>$1</li>")
-    .replace(/<li>.*?<\/li>/gs, '<ol class="list-decimal pl-6">$&</ol>')
-    .replace(/!\[(.*?)\]$$(.*?)$$/g, '<img src="$2" alt="$1" class="my-4 rounded-md" />')
-    .replace(/^(?!<[uo]l|<pre|<img)(.*?)$/gm, '<p class="mb-4">$1</p>')
-
-  return html
 }
 

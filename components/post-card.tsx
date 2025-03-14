@@ -1,6 +1,4 @@
 "use client"
-
-import { useState } from "react"
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import { MessageCircle, Share2 } from "lucide-react"
@@ -8,7 +6,6 @@ import { MessageCircle, Share2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { VoteButtons } from "@/components/vote-buttons"
 import { toast } from "@/components/ui/use-toast"
 
 interface Post {
@@ -26,7 +23,6 @@ interface Post {
     likes: number
   }
   votes?: number
-  userVote?: "up" | "down" | null
 }
 
 interface PostCardProps {
@@ -34,36 +30,6 @@ interface PostCardProps {
 }
 
 export function PostCard({ post }: PostCardProps) {
-  const [likeCount, setLikeCount] = useState(post._count.likes)
-  const [isLiked, setIsLiked] = useState(false)
-
-  const handleLike = () => {
-    if (isLiked) {
-      setLikeCount(likeCount - 1)
-    } else {
-      setLikeCount(likeCount + 1)
-    }
-    setIsLiked(!isLiked)
-
-    // Call the API to update the like status
-    fetch(`/api/posts/${post.id}/like`, {
-      method: isLiked ? "DELETE" : "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }).catch((error) => {
-      console.error("Error updating like status:", error)
-      // Revert the UI state if the API call fails
-      setLikeCount(isLiked ? likeCount + 1 : likeCount - 1)
-      setIsLiked(!isLiked)
-      toast({
-        title: "Error",
-        description: "Failed to update like status. Please try again.",
-        variant: "destructive",
-      })
-    })
-  }
-
   const handleShare = () => {
     navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`)
     toast({
@@ -100,24 +66,22 @@ export function PostCard({ post }: PostCardProps) {
         <CardContent className="p-4 pt-0">
           <h3 className="mb-2 text-xl font-bold tracking-tight">{post.title}</h3>
           <div className="line-clamp-3 text-muted-foreground">
-            {post.content.replace(/\*\*|__|\*|_|`|#|\[.*?\]$$.*?$$|!\[.*?\]$$.*?$$/g, "")}
+            {post.content.substring(0, 200)}
+            {post.content.length > 200 ? "..." : ""}
           </div>
         </CardContent>
       </Link>
       <CardFooter className="flex items-center justify-between border-t p-4">
         <div className="flex items-center gap-6">
-          <VoteButtons
-            itemId={post.id}
-            itemType="post"
-            initialVotes={post.votes || 0}
-            initialVote={post.userVote}
-            orientation="horizontal"
-            size="sm"
-          />
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" className="flex items-center gap-1 px-2 cursor-default" disabled>
+              <span>{post.votes || 0} votes</span>
+            </Button>
+          </div>
           <Link href={`/post/${post.id}`}>
             <Button variant="ghost" size="sm" className="flex items-center gap-1 px-2">
               <MessageCircle className="h-4 w-4" />
-              <span>{post._count.comments}</span>
+              <span>{post._count.comments || 0}</span>
             </Button>
           </Link>
         </div>

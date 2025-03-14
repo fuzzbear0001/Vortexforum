@@ -14,12 +14,6 @@ export async function getPosts() {
             image: true,
           },
         },
-        _count: {
-          select: {
-            comments: true,
-            postVotes: true,
-          },
-        },
       },
     })
 
@@ -27,9 +21,10 @@ export async function getPosts() {
     return posts.map((post) => ({
       ...post,
       _count: {
-        ...post._count,
-        likes: post._count.postVotes,
+        comments: 0,
+        likes: 0,
       },
+      votes: 0,
     }))
   } catch (error) {
     console.error("Error fetching posts:", error)
@@ -49,31 +44,6 @@ export async function getPostById(id: string) {
             image: true,
           },
         },
-        comments: {
-          orderBy: {
-            createdAt: "desc",
-          },
-          include: {
-            author: {
-              select: {
-                id: true,
-                name: true,
-                image: true,
-              },
-            },
-            _count: {
-              select: {
-                commentVotes: true,
-              },
-            },
-          },
-        },
-        _count: {
-          select: {
-            comments: true,
-            postVotes: true,
-          },
-        },
       },
     })
 
@@ -83,15 +53,11 @@ export async function getPostById(id: string) {
     return {
       ...post,
       _count: {
-        ...post._count,
-        likes: post._count.postVotes,
+        comments: 0,
+        likes: 0,
       },
-      comments: post.comments.map((comment) => ({
-        ...comment,
-        _count: {
-          likes: comment._count.commentVotes,
-        },
-      })),
+      votes: 0,
+      comments: [],
     }
   } catch (error) {
     console.error("Error fetching post:", error)
@@ -109,7 +75,6 @@ export async function getUserByUsername(username: string) {
         email: true,
         image: true,
         createdAt: true,
-        reputation: true,
       },
     })
 
@@ -135,12 +100,6 @@ export async function getUserPosts(userId: string) {
             image: true,
           },
         },
-        _count: {
-          select: {
-            comments: true,
-            postVotes: true,
-          },
-        },
       },
     })
 
@@ -148,9 +107,10 @@ export async function getUserPosts(userId: string) {
     return posts.map((post) => ({
       ...post,
       _count: {
-        ...post._count,
-        likes: post._count.postVotes,
+        comments: 0,
+        likes: 0,
       },
+      votes: 0,
     }))
   } catch (error) {
     console.error("Error fetching user posts:", error)
@@ -159,44 +119,7 @@ export async function getUserPosts(userId: string) {
 }
 
 export async function getUserComments(userId: string) {
-  try {
-    const comments = await prisma.comment.findMany({
-      where: { authorId: userId },
-      orderBy: {
-        createdAt: "desc",
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-          },
-        },
-        post: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-        _count: {
-          select: {
-            commentVotes: true,
-          },
-        },
-      },
-    })
-
-    // Transform the comments to match the expected format
-    return comments.map((comment) => ({
-      ...comment,
-      _count: {
-        likes: comment._count.commentVotes,
-      },
-    }))
-  } catch (error) {
-    console.error("Error fetching user comments:", error)
-    return []
-  }
+  // Since we don't have comments table yet, return empty array
+  return []
 }
 

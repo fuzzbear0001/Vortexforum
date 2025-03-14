@@ -38,9 +38,19 @@ export default async function Home() {
         </div>
 
         <div className="mt-12 flex flex-col gap-6">
-          {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
+          {posts.length > 0 ? (
+            posts.map((post) => <PostCard key={post.id} post={post} />)
+          ) : (
+            <div className="rounded-lg border border-dashed p-12 text-center">
+              <h3 className="text-lg font-medium mb-2">No posts yet</h3>
+              <p className="text-muted-foreground mb-6">Be the first to create a post in this community!</p>
+              <Link href="/create">
+                <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
+                  Create the first post
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

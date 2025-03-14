@@ -83,6 +83,7 @@ export default function SignupPage() {
       router.push("/")
     } catch (error: any) {
       setError(error.message || "Something went wrong. Please try again.")
+      console.error("Signup error:", error)
     } finally {
       setIsLoading(false)
     }

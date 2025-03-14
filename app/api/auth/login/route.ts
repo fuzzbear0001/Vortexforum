@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     const token = generateAuthToken(user, rememberMe)
     setAuthCookie(token, rememberMe)
 
-    // Remove password from response
+    // Don't return password in response
     const { password: _, ...userWithoutPassword } = user
 
     return NextResponse.json({
