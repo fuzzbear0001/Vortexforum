@@ -1,57 +1,61 @@
 import Link from "next/link"
-import { PostCard } from "@/components/post-card"
 import { Button } from "@/components/ui/button"
-import { getPosts } from "@/lib/data"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { prisma } from "@/lib/prisma"
 
 export default async function Home() {
-  const posts = await getPosts()
+  // Fetch posts directly here to avoid any potential issues
+  const posts = await prisma.post.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  })
 
   return (
-    <div className="relative min-h-screen">
-      {/* Gradient background */}
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-400 via-indigo-400 to-indigo-800 opacity-10 dark:opacity-20"></div>
-
-      {/* Animated shapes */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-purple-600 opacity-20 blur-3xl"></div>
-        <div className="absolute top-1/3 -left-40 h-96 w-96 rounded-full bg-indigo-600 opacity-20 blur-3xl"></div>
+    <div className="container py-8">
+      <div className="mb-8 text-center">
+        <h1 className="text-3xl font-bold mb-4">Modern Forum</h1>
+        <p className="text-muted-foreground mb-6">Join the conversation</p>
+        <Link href="/create">
+          <Button>Create Post</Button>
+        </Link>
       </div>
 
-      <div className="container max-w-4xl py-12">
-        <div className="flex flex-col items-center justify-center text-center mb-12">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">
-            Modern Forum
-          </h1>
-          <p className="mt-4 text-lg text-muted-foreground max-w-lg">
-            Join the conversation in our sleek, modern community platform
-          </p>
-          <div className="mt-8">
+      <div className="grid gap-4">
+        {posts.length > 0 ? (
+          posts.map((post) => (
+            <Card key={post.id}>
+              <CardHeader>
+                <CardTitle>
+                  <Link href={`/post/${post.id}`} className="hover:underline">
+                    {post.title}
+                  </Link>
+                </CardTitle>
+                <div className="text-sm text-muted-foreground">
+                  Posted by {post.author.name} on {new Date(post.createdAt).toLocaleDateString()}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="line-clamp-3">{post.content}</p>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <div className="text-center p-12 border rounded-lg">
+            <p className="mb-4">No posts yet</p>
             <Link href="/create">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-              >
-                Create Post
-              </Button>
+              <Button>Create the first post</Button>
             </Link>
           </div>
-        </div>
-
-        <div className="mt-12 flex flex-col gap-6">
-          {posts.length > 0 ? (
-            posts.map((post) => <PostCard key={post.id} post={post} />)
-          ) : (
-            <div className="rounded-lg border border-dashed p-12 text-center">
-              <h3 className="text-lg font-medium mb-2">No posts yet</h3>
-              <p className="text-muted-foreground mb-6">Be the first to create a post in this community!</p>
-              <Link href="/create">
-                <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
-                  Create the first post
-                </Button>
-              </Link>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   )

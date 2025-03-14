@@ -18,6 +18,7 @@ import { toast } from "@/components/ui/use-toast"
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(1, { message: "Password is required" }),
   rememberMe: z.boolean().default(false),
 })
 
@@ -32,6 +33,7 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
+      password: "",
       rememberMe: false,
     },
   })
@@ -46,6 +48,7 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: data.email,
+          password: data.password,
           rememberMe: data.rememberMe,
         }),
       })
@@ -64,7 +67,7 @@ export default function LoginPage() {
       // Redirect to home page after successful login
       router.push("/")
     } catch (error: any) {
-      setError(error.message || "Invalid email. Please try again.")
+      setError(error.message || "Invalid email or password. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -85,7 +88,7 @@ export default function LoginPage() {
         <Card className="w-full max-w-md border-none bg-white/80 backdrop-blur-md dark:bg-gray-950/80">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold">Log in</CardTitle>
-            <CardDescription>Enter your email to access your account</CardDescription>
+            <CardDescription>Enter your credentials to access your account</CardDescription>
           </CardHeader>
           <CardContent>
             {error && (
@@ -105,6 +108,28 @@ export default function LoginPage() {
                       <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="john.doe@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>Password</FormLabel>
+                        <Link
+                          href="/auth/forgot-password"
+                          className="text-xs text-primary underline underline-offset-4 hover:text-primary/80 transition-colors"
+                        >
+                          Forgot password?
+                        </Link>
+                      </div>
+                      <FormControl>
+                        <Input type="password" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

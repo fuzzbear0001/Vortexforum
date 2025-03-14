@@ -1,45 +1,32 @@
 import type React from "react"
+import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import { MainNav } from "@/components/main-nav"
-import { ThemeProvider } from "@/components/theme-provider"
+import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
-
-import "@/app/globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export const metadata = {
-  title: "Modern Forum Platform",
-  description: "A modern, sleek, and ultra-polished forum platform",
+export const metadata: Metadata = {
+  title: "Modern Forum",
+  description: "A simple forum application",
     generator: 'v0.dev'
 }
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <div className="flex min-h-screen flex-col">
-            <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
-              <div className="container">
-                <MainNav />
-              </div>
-            </header>
-            <main className="flex-1">{children}</main>
-            <footer className="py-6 bg-gradient-to-r from-purple-600/10 to-indigo-600/5">
-              <div className="container flex flex-col items-center justify-between gap-4 md:flex-row">
-                <p className="text-center text-sm text-muted-foreground">
-                  &copy; {new Date().getFullYear()} Modern Forum Platform. All rights reserved.
-                </p>
-              </div>
-            </footer>
+        <header className="border-b py-4">
+          <div className="container">
+            <h1 className="text-xl font-bold">Modern Forum</h1>
           </div>
-          <Toaster />
-        </ThemeProvider>
+        </header>
+        <main>{children}</main>
+        <Toaster />
       </body>
     </html>
   )

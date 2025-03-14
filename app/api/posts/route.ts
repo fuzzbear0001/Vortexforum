@@ -73,47 +73,21 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
+    const { title, content } = body
 
-    // Validate request body
-    const result = postSchema.safeParse(body)
-    if (!result.success) {
-      return NextResponse.json({ error: "Invalid input", details: result.error.format() }, { status: 400 })
+    if (!title || !content) {
+      return NextResponse.json({ error: "Title and content are required" }, { status: 400 })
     }
 
-    const { title, content } = result.data
-
-    // Create post
     const post = await prisma.post.create({
       data: {
         title,
         content,
         authorId: user.id,
       },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-          },
-        },
-      },
     })
 
-    return NextResponse.json(
-      {
-        message: "Post created successfully",
-        post: {
-          ...post,
-          _count: {
-            comments: 0,
-            likes: 0,
-          },
-          votes: 0,
-        },
-      },
-      { status: 201 },
-    )
+    return NextResponse.json({ message: "Post created successfully", post }, { status: 201 })
   } catch (error) {
     console.error("Error creating post:", error)
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 })

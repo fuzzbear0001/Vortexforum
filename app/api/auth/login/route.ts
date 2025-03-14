@@ -6,6 +6,7 @@ import { authenticateUser, generateAuthToken, setAuthCookie } from "@/lib/auth"
 // Define validation schema
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().optional(),
   rememberMe: z.boolean().default(false),
 })
 
@@ -19,13 +20,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid input", details: result.error.format() }, { status: 400 })
     }
 
-    const { email, rememberMe } = result.data
+    const { email, password, rememberMe } = result.data
 
     // Authenticate user
-    const user = await authenticateUser(email)
+    const user = await authenticateUser(email, password)
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 401 })
+      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
     }
 
     // Generate token and set cookie
@@ -34,7 +35,12 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       message: "Login successful",
-      user: user,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        image: user.image,
+      },
     })
   } catch (error) {
     console.error("Error during login:", error)
