@@ -1,6 +1,5 @@
 import { cookies } from "next/headers"
 import { verify, sign } from "jsonwebtoken"
-import { compare, hash } from "bcrypt"
 
 import { prisma } from "@/lib/prisma"
 
@@ -26,7 +25,6 @@ export async function getCurrentUser() {
         id: true,
         name: true,
         email: true,
-        image: true,
         createdAt: true,
       },
     })
@@ -38,27 +36,14 @@ export async function getCurrentUser() {
   }
 }
 
-export async function authenticateUser(email: string, password: string) {
+// Simple login - just find the user by email
+export async function authenticateUser(email: string) {
   // Find user by email
   const user = await prisma.user.findUnique({
     where: { email },
   })
 
-  if (!user || !user.password) {
-    return null
-  }
-
-  // Verify password
-  const passwordMatch = await compare(password, user.password)
-  if (!passwordMatch) {
-    return null
-  }
-
   return user
-}
-
-export async function hashPassword(password: string) {
-  return hash(password, 10)
 }
 
 export function generateAuthToken(user: { id: string; email: string }, rememberMe = false) {
