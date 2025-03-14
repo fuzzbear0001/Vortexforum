@@ -40,18 +40,20 @@ export default function CreatePostPage() {
     setIsLoading(true)
 
     try {
-      // In a real app, you would call your API to create the post
-      // const response = await fetch("/api/posts", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({
-      //     title: data.title,
-      //     content: data.content,
-      //   }),
-      // });
+      const response = await fetch("/api/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: data.title,
+          content: data.content,
+        }),
+      })
 
-      // if (!response.ok) throw new Error("Failed to create post");
-      // const post = await response.json();
+      const responseData = await response.json()
+
+      if (!response.ok) {
+        throw new Error(responseData.error || "Failed to create post")
+      }
 
       toast({
         title: "Post created!",
@@ -59,11 +61,11 @@ export default function CreatePostPage() {
       })
 
       // Redirect to the newly created post
-      router.push("/")
-    } catch (error) {
+      router.push(`/post/${responseData.post.id}`)
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: error.message || "Something went wrong. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -76,58 +78,63 @@ export default function CreatePostPage() {
   }
 
   return (
-    <div className="container max-w-4xl py-6 lg:py-10">
-      <Card>
-        <CardHeader>
-          <CardTitle>Create a new post</CardTitle>
-          <CardDescription>Share your thoughts, questions, or ideas with the community</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter a descriptive title" {...field} className="text-lg font-medium" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+    <div className="relative">
+      <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-gray-950">
+        <div className="absolute bottom-auto left-auto right-0 top-0 h-[500px] w-[500px] -translate-x-[30%] translate-y-[20%] rounded-full bg-primary opacity-10 blur-[80px]"></div>
+      </div>
+      <div className="container max-w-4xl py-6 lg:py-10">
+        <Card className="gradient-border">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">Create a new post</CardTitle>
+            <CardDescription>Share your thoughts, questions, or ideas with the community</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter a descriptive title" {...field} className="text-lg font-medium" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Content</FormLabel>
-                    <FormControl>
-                      <RichTextEditor value={field.value} onChange={field.onChange} isPreview={isPreview} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="content"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Content</FormLabel>
+                      <FormControl>
+                        <RichTextEditor value={field.value} onChange={field.onChange} isPreview={isPreview} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <div className="flex justify-end space-x-4">
-                <Button type="button" variant="outline" onClick={togglePreview}>
-                  {isPreview ? "Edit" : "Preview"}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => router.back()}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Publishing..." : "Publish Post"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                <div className="flex justify-end space-x-4">
+                  <Button type="button" variant="outline" onClick={togglePreview}>
+                    {isPreview ? "Edit" : "Preview"}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => router.back()}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="gradient-bg" disabled={isLoading}>
+                    {isLoading ? "Publishing..." : "Publish Post"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

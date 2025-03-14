@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { VoteButtons } from "@/components/vote-buttons"
+import { toast } from "@/components/ui/use-toast"
 
 interface Post {
   id: string
@@ -43,18 +44,50 @@ export function PostCard({ post }: PostCardProps) {
       setLikeCount(likeCount + 1)
     }
     setIsLiked(!isLiked)
-    // In a real app, you would call an API to update the like status
+
+    // Call the API to update the like status
+    fetch(`/api/posts/${post.id}/like`, {
+      method: isLiked ? "DELETE" : "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).catch((error) => {
+      console.error("Error updating like status:", error)
+      // Revert the UI state if the API call fails
+      setLikeCount(isLiked ? likeCount + 1 : likeCount - 1)
+      setIsLiked(!isLiked)
+      toast({
+        title: "Error",
+        description: "Failed to update like status. Please try again.",
+        variant: "destructive",
+      })
+    })
+  }
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`)
+    toast({
+      title: "Link copied",
+      description: "Post link copied to clipboard",
+    })
   }
 
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-md">
+    <Card className="overflow-hidden transition-all hover:shadow-md gradient-border">
       <CardHeader className="flex flex-row items-center gap-4 p-4">
-        <Avatar className="h-10 w-10">
-          <AvatarImage src={post.author.image || "/placeholder.svg?height=40&width=40"} alt={post.author.name} />
-          <AvatarFallback>{post.author.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+        <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+          <AvatarImage src={post.author.image} alt={post.author.name} />
+          <AvatarFallback className="bg-primary/10 text-primary">
+            {post.author.name.substring(0, 2).toUpperCase()}
+          </AvatarFallback>
         </Avatar>
         <div className="flex flex-col">
-          <p className="text-sm font-medium">{post.author.name}</p>
+          <Link
+            href={`/profile/${post.author.name}`}
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
+            {post.author.name}
+          </Link>
           <p className="text-xs text-muted-foreground">
             {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
           </p>
@@ -83,7 +116,7 @@ export function PostCard({ post }: PostCardProps) {
             </Button>
           </Link>
         </div>
-        <Button variant="ghost" size="sm" className="px-2">
+        <Button variant="ghost" size="sm" className="px-2" onClick={handleShare}>
           <Share2 className="h-4 w-4" />
         </Button>
       </CardFooter>

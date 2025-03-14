@@ -17,15 +17,35 @@ export function AvatarUpload({ value, onChange }: AvatarUploadProps) {
   const [preview, setPreview] = useState<string>(value)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // In a real app, you would upload the file to your server or a storage service
-    // For this demo, we'll just create a local object URL
-    const objectUrl = URL.createObjectURL(file)
-    setPreview(objectUrl)
-    onChange(objectUrl)
+    try {
+      // Create a FormData object to send the file to the server
+      const formData = new FormData()
+      formData.append("file", file)
+
+      // Upload the file to the server
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to upload image")
+      }
+
+      const data = await response.json()
+      setPreview(data.url)
+      onChange(data.url)
+    } catch (error) {
+      console.error("Error uploading image:", error)
+      // Fallback to local object URL if server upload fails
+      const objectUrl = URL.createObjectURL(file)
+      setPreview(objectUrl)
+      onChange(objectUrl)
+    }
   }
 
   const handleRemove = () => {
@@ -46,9 +66,9 @@ export function AvatarUpload({ value, onChange }: AvatarUploadProps) {
 
       {preview ? (
         <div className="relative">
-          <Avatar className="h-24 w-24 cursor-pointer" onClick={triggerFileInput}>
+          <Avatar className="h-24 w-24 cursor-pointer ring-2 ring-primary/20" onClick={triggerFileInput}>
             <AvatarImage src={preview} alt="Avatar" />
-            <AvatarFallback>?</AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-primary">?</AvatarFallback>
           </Avatar>
           <Button
             variant="destructive"
@@ -61,10 +81,10 @@ export function AvatarUpload({ value, onChange }: AvatarUploadProps) {
         </div>
       ) : (
         <div
-          className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-full border-2 border-dashed border-muted-foreground bg-muted"
+          className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-full border-2 border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 transition-colors"
           onClick={triggerFileInput}
         >
-          <Camera className="h-8 w-8 text-muted-foreground" />
+          <Camera className="h-8 w-8 text-primary/60" />
         </div>
       )}
     </div>

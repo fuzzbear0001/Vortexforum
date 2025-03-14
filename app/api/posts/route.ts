@@ -37,16 +37,25 @@ export async function GET(req: Request) {
         _count: {
           select: {
             comments: true,
-            likes: true,
+            postVotes: true,
           },
         },
       },
     })
 
+    // Transform the posts to match the expected format
+    const transformedPosts = posts.map((post) => ({
+      ...post,
+      _count: {
+        ...post._count,
+        likes: post._count.postVotes,
+      },
+    }))
+
     const totalPosts = await prisma.post.count()
 
     return NextResponse.json({
-      posts,
+      posts: transformedPosts,
       pagination: {
         total: totalPosts,
         pages: Math.ceil(totalPosts / limit),

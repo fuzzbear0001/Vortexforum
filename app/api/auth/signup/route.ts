@@ -3,6 +3,7 @@ import { hash } from "bcrypt"
 import { z } from "zod"
 
 import { prisma } from "@/lib/prisma"
+import { generateAuthToken, setAuthCookie } from "@/lib/auth"
 
 // Define validation schema
 const userSchema = z.object({
@@ -53,9 +54,13 @@ export async function POST(req: Request) {
         name: username,
         email,
         password: hashedPassword,
-        image: avatar,
+        image: avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${username}`,
       },
     })
+
+    // Generate token and set cookie
+    const token = generateAuthToken(user)
+    setAuthCookie(token)
 
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user

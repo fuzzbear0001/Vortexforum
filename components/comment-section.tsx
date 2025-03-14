@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 import { VoteButtons } from "@/components/vote-buttons"
+import { useRouter } from "next/navigation"
 
 interface Comment {
   id: string
@@ -32,7 +33,9 @@ interface CommentSectionProps {
   comments: Comment[]
 }
 
-export function CommentSection({ postId, comments }: CommentSectionProps) {
+export function CommentSection({ postId, comments: initialComments }: CommentSectionProps) {
+  const router = useRouter()
+  const [comments, setComments] = useState(initialComments || [])
   const [newComment, setNewComment] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({})
@@ -45,14 +48,18 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
     setIsSubmitting(true)
 
     try {
-      // In a real app, you would call your API to create the comment
-      // const response = await fetch(`/api/posts/${postId}/comments`, {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ content: newComment }),
-      // });
+      const response = await fetch(`/api/posts/${postId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: newComment }),
+      })
 
-      // if (!response.ok) throw new Error("Failed to post comment");
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to post comment")
+      }
+
+      const data = await response.json()
 
       toast({
         title: "Comment posted",
@@ -60,11 +67,12 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
       })
 
       setNewComment("")
-      // In a real app, you would refresh the comments or add the new comment to the list
-    } catch (error) {
+      setComments([data.comment, ...comments])
+      router.refresh()
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to post comment. Please try again.",
+        description: error.message || "Failed to post comment. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -78,14 +86,18 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
     setIsSubmitting(true)
 
     try {
-      // In a real app, you would call your API to create the reply
-      // const response = await fetch(`/api/comments/${commentId}/replies`, {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ content: replyContent }),
-      // });
+      const response = await fetch(`/api/comments/${commentId}/replies`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: replyContent }),
+      })
 
-      // if (!response.ok) throw new Error("Failed to post reply");
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to post reply")
+      }
+
+      const data = await response.json()
 
       toast({
         title: "Reply posted",
@@ -94,11 +106,11 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
 
       setReplyContent("")
       setReplyingTo(null)
-      // In a real app, you would refresh the comments or add the new reply to the list
-    } catch (error) {
+      router.refresh()
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to post reply. Please try again.",
+        description: error.message || "Failed to post reply. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -130,7 +142,7 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
           className="min-h-[100px] resize-y"
         />
         <div className="flex justify-end">
-          <Button onClick={handleSubmitComment} disabled={isSubmitting || !newComment.trim()}>
+          <Button onClick={handleSubmitComment} disabled={isSubmitting || !newComment.trim()} className="gradient-bg">
             {isSubmitting ? "Posting..." : "Post Comment"}
           </Button>
         </div>
@@ -140,14 +152,18 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
         {comments.length > 0 ? (
           comments.map((comment) => (
             <div key={comment.id} className="space-y-4">
-              <div className="rounded-lg border p-4">
+              <div className="rounded-lg border p-4 gradient-border">
                 <div className="flex items-center gap-4">
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-8 w-8 ring-2 ring-primary/20">
                     <AvatarImage
-                      src={comment.author.image || "/placeholder.svg?height=32&width=32"}
+                      src={
+                        comment.author.image || `https://api.dicebear.com/7.x/initials/svg?seed=${comment.author.name}`
+                      }
                       alt={comment.author.name}
                     />
-                    <AvatarFallback>{comment.author.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-primary">
+                      {comment.author.name.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
                     <p className="text-sm font-medium">{comment.author.name}</p>
@@ -212,6 +228,7 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
                       size="sm"
                       onClick={() => handleSubmitReply(comment.id)}
                       disabled={isSubmitting || !replyContent.trim()}
+                      className="gradient-bg"
                     >
                       {isSubmitting ? "Posting..." : "Post Reply"}
                     </Button>
@@ -222,14 +239,19 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
               {expandedReplies[comment.id] && comment.replies && comment.replies.length > 0 && (
                 <div className="ml-8 space-y-4">
                   {comment.replies.map((reply) => (
-                    <div key={reply.id} className="rounded-lg border p-4">
+                    <div key={reply.id} className="rounded-lg border p-4 gradient-border">
                       <div className="flex items-center gap-4">
-                        <Avatar className="h-8 w-8">
+                        <Avatar className="h-8 w-8 ring-2 ring-primary/20">
                           <AvatarImage
-                            src={reply.author.image || "/placeholder.svg?height=32&width=32"}
+                            src={
+                              reply.author.image ||
+                              `https://api.dicebear.com/7.x/initials/svg?seed=${reply.author.name}`
+                            }
                             alt={reply.author.name}
                           />
-                          <AvatarFallback>{reply.author.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                          <AvatarFallback className="bg-primary/10 text-primary">
+                            {reply.author.name.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
                           <p className="text-sm font-medium">{reply.author.name}</p>
@@ -260,7 +282,9 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
             </div>
           ))
         ) : (
-          <p className="text-center text-muted-foreground">No comments yet. Be the first to comment!</p>
+          <div className="rounded-lg border border-dashed p-8 text-center">
+            <p className="text-muted-foreground">No comments yet. Be the first to comment!</p>
+          </div>
         )}
       </div>
     </div>

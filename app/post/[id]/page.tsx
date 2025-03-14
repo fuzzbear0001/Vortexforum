@@ -22,43 +22,53 @@ export default async function PostPage({ params }: PostPageProps) {
   }
 
   return (
-    <div className="container max-w-4xl py-6 lg:py-10">
-      <div className="flex flex-col gap-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{post.title}</h1>
-          <div className="mt-4 flex items-center gap-4">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={post.author.image || "/placeholder.svg?height=40&width=40"} alt={post.author.name} />
-              <AvatarFallback>{post.author.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col">
-              <p className="text-sm font-medium">{post.author.name}</p>
-              <p className="text-xs text-muted-foreground">
-                {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
-              </p>
+    <div className="relative">
+      <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-gray-950">
+        <div className="absolute bottom-auto left-auto right-0 top-0 h-[500px] w-[500px] -translate-x-[30%] translate-y-[20%] rounded-full bg-primary opacity-10 blur-[80px]"></div>
+      </div>
+      <div className="container max-w-4xl py-6 lg:py-10">
+        <div className="flex flex-col gap-8">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">{post.title}</h1>
+            <div className="mt-4 flex items-center gap-4">
+              <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+                <AvatarImage
+                  src={post.author.image || `https://api.dicebear.com/7.x/initials/svg?seed=${post.author.name}`}
+                  alt={post.author.name}
+                />
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  {post.author.name.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col">
+                <p className="text-sm font-medium">{post.author.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+                </p>
+              </div>
             </div>
           </div>
+
+          <Card className="overflow-hidden p-6 gradient-border">
+            <div className="flex">
+              <VoteButtons
+                itemId={post.id}
+                itemType="post"
+                initialVotes={post.votes || 0}
+                initialVote={post.userVote}
+                className="mr-4"
+              />
+              <div
+                className="prose max-w-none dark:prose-invert"
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }}
+              />
+            </div>
+          </Card>
+
+          <Separator />
+
+          <CommentSection postId={post.id} comments={post.comments} />
         </div>
-
-        <Card className="overflow-hidden p-6">
-          <div className="flex">
-            <VoteButtons
-              itemId={post.id}
-              itemType="post"
-              initialVotes={post.votes || 0}
-              initialVote={post.userVote}
-              className="mr-4"
-            />
-            <div
-              className="prose max-w-none dark:prose-invert"
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }}
-            />
-          </div>
-        </Card>
-
-        <Separator />
-
-        <CommentSection postId={post.id} comments={post.comments} />
       </div>
     </div>
   )

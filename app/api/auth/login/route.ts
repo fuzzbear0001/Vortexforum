@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server"
-import { compare } from "bcrypt"
-import { sign } from "jsonwebtoken"
-import { cookies } from "next/headers"
 import { z } from "zod"
 
-import { prisma } from "@/lib/prisma"
+import { authenticateUser, generateAuthToken, setAuthCookie } from "@/lib/auth"
 
 // Define validation schema
 const loginSchema = z.object({
@@ -25,37 +22,16 @@ export async function POST(req: Request) {
 
     const { email, password, rememberMe } = result.data
 
-    // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email },
-    })
+    // Authenticate user
+    const user = await authenticateUser(email, password)
 
     if (!user) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
     }
 
-    // Verify password
-    const passwordMatch = await compare(password, user.password)
-    if (!passwordMatch) {
-      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
-    }
-
-    // Create JWT token
-    const token = sign({ id: user.id, email: user.email }, process.env.JWT_SECRET || "fallback_secret", {
-      expiresIn: rememberMe ? "30d" : "1d",
-    })
-
-    // Set cookie
-    const cookieStore = cookies()
-    cookieStore.set({
-      name: "auth_token",
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      path: "/",
-      maxAge: rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60, // 30 days or 1 day in seconds
-    })
+    // Generate token and set cookie
+    const token = generateAuthToken(user, rememberMe)
+    setAuthCookie(token, rememberMe)
 
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user

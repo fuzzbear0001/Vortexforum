@@ -59,12 +59,13 @@
     "vaul": "^0.9.6",
     "zod": "latest",
     "prisma": "latest",
-    "typescript": "latest",
-    "tailwindcss": "latest",
     "@prisma/client": "latest",
-    "bcryptjs": "latest",
+    "@tailwindcss/typography": "latest",
     "jsonwebtoken": "latest",
-    "@tailwindcss/typography": "latest"
+    "bcryptjs": "latest",
+    "fs": "latest",
+    "path": "latest",
+    "uuid": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

@@ -24,13 +24,13 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="flex min-h-screen flex-col">
-            <header className="sticky top-0 z-40 border-b bg-background">
+            <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
               <div className="container">
                 <MainNav />
               </div>
             </header>
             <main className="flex-1">{children}</main>
-            <footer className="border-t py-6">
+            <footer className="border-t py-6 bg-gradient-to-r from-primary/10 to-primary/5">
               <div className="container flex flex-col items-center justify-between gap-4 md:flex-row">
                 <p className="text-center text-sm text-muted-foreground">
                   &copy; {new Date().getFullYear()} Modern Forum Platform. All rights reserved.
