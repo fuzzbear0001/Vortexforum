@@ -6,13 +6,14 @@ import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
+import { AlertCircle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { toast } from "@/components/ui/use-toast"
-import { AvatarUpload } from "@/components/avatar-upload"
 
 const signupSchema = z
   .object({
@@ -29,7 +30,6 @@ const signupSchema = z
       .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
       .regex(/[0-9]/, { message: "Password must contain at least one number" }),
     confirmPassword: z.string(),
-    avatar: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -41,7 +41,7 @@ type SignupFormValues = z.infer<typeof signupSchema>
 export default function SignupPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const [avatarUrl, setAvatarUrl] = useState("")
+  const [error, setError] = useState<string | null>(null)
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -50,12 +50,12 @@ export default function SignupPage() {
       email: "",
       password: "",
       confirmPassword: "",
-      avatar: "",
     },
   })
 
   async function onSubmit(data: SignupFormValues) {
     setIsLoading(true)
+    setError(null)
 
     try {
       const response = await fetch("/api/auth/signup", {
@@ -65,7 +65,6 @@ export default function SignupPage() {
           username: data.username,
           email: data.email,
           password: data.password,
-          avatar: avatarUrl,
         }),
       })
 
@@ -80,37 +79,42 @@ export default function SignupPage() {
         description: "You can now log in with your credentials.",
       })
 
-      // Redirect to login page after successful signup
-      router.push("/auth/login")
+      // Redirect to home page after successful signup
+      router.push("/")
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
+      setError(error.message || "Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="relative">
-      <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-gray-950">
-        <div className="absolute bottom-auto left-auto right-0 top-0 h-[500px] w-[500px] -translate-x-[30%] translate-y-[20%] rounded-full bg-primary opacity-10 blur-[80px]"></div>
+    <div className="relative min-h-screen">
+      {/* Gradient background */}
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-400 via-indigo-400 to-indigo-800 opacity-20 dark:opacity-30"></div>
+
+      {/* Animated shapes */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-purple-600 opacity-20 blur-3xl"></div>
+        <div className="absolute top-1/3 -left-40 h-96 w-96 rounded-full bg-indigo-600 opacity-20 blur-3xl"></div>
       </div>
-      <div className="container flex h-screen max-w-screen-md items-center justify-center">
-        <Card className="w-full max-w-md gradient-border">
+
+      <div className="container flex min-h-screen max-w-screen-md items-center justify-center py-12">
+        <Card className="w-full max-w-md border-none bg-white/80 backdrop-blur-md dark:bg-gray-950/80">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
             <CardDescription>Enter your information to create an account</CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="flex justify-center mb-6">
-                  <AvatarUpload value={avatarUrl} onChange={setAvatarUrl} />
-                </div>
-
                 <FormField
                   control={form.control}
                   name="username"
@@ -168,7 +172,11 @@ export default function SignupPage() {
                   )}
                 />
 
-                <Button type="submit" className="w-full gradient-bg" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                  disabled={isLoading}
+                >
                   {isLoading ? "Creating account..." : "Create account"}
                 </Button>
               </form>

@@ -22,11 +22,17 @@ export default async function PostPage({ params }: PostPageProps) {
   }
 
   return (
-    <div className="relative">
-      <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-gray-950">
-        <div className="absolute bottom-auto left-auto right-0 top-0 h-[500px] w-[500px] -translate-x-[30%] translate-y-[20%] rounded-full bg-primary opacity-10 blur-[80px]"></div>
+    <div className="relative min-h-screen">
+      {/* Gradient background */}
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-400 via-indigo-400 to-indigo-800 opacity-10 dark:opacity-20"></div>
+
+      {/* Animated shapes */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-purple-600 opacity-20 blur-3xl"></div>
+        <div className="absolute top-1/3 -left-40 h-96 w-96 rounded-full bg-indigo-600 opacity-20 blur-3xl"></div>
       </div>
-      <div className="container max-w-4xl py-6 lg:py-10">
+
+      <div className="container max-w-4xl py-12">
         <div className="flex flex-col gap-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{post.title}</h1>
@@ -49,7 +55,7 @@ export default async function PostPage({ params }: PostPageProps) {
             </div>
           </div>
 
-          <Card className="overflow-hidden p-6 gradient-border">
+          <Card className="overflow-hidden p-6 border-none bg-white/80 backdrop-blur-md dark:bg-gray-950/80">
             <div className="flex">
               <VoteButtons
                 itemId={post.id}

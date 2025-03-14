@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server"
-import { hash } from "bcrypt"
 import { z } from "zod"
 
 import { prisma } from "@/lib/prisma"
-import { generateAuthToken, setAuthCookie } from "@/lib/auth"
+import { generateAuthToken, setAuthCookie, hashPassword } from "@/lib/auth"
 
 // Define validation schema
 const userSchema = z.object({
@@ -19,7 +18,6 @@ const userSchema = z.object({
     .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
     .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
     .regex(/[0-9]/, { message: "Password must contain at least one number" }),
-  avatar: z.string().optional(),
 })
 
 export async function POST(req: Request) {
@@ -32,7 +30,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid input", details: result.error.format() }, { status: 400 })
     }
 
-    const { username, email, password, avatar } = result.data
+    const { username, email, password } = result.data
 
     // Check if user already exists
     const existingUser = await prisma.user.findFirst({
@@ -46,15 +44,15 @@ export async function POST(req: Request) {
     }
 
     // Hash password
-    const hashedPassword = await hash(password, 10)
+    const hashedPassword = await hashPassword(password)
 
     // Create user
     const user = await prisma.user.create({
       data: {
         name: username,
         email,
-        password: hashedPassword,
-        image: avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${username}`,
+        hashedPassword,
+        image: `https://api.dicebear.com/7.x/initials/svg?seed=${username}`,
       },
     })
 
@@ -63,12 +61,17 @@ export async function POST(req: Request) {
     setAuthCookie(token)
 
     // Remove password from response
-    const { password: _, ...userWithoutPassword } = user
+    const { hashedPassword: _, ...userWithoutPassword } = user
 
     return NextResponse.json({ message: "User created successfully", user: userWithoutPassword }, { status: 201 })
   } catch (error) {
     console.error("Error creating user:", error)
-    return NextResponse.json({ error: "Something went wrong" }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: "Something went wrong while creating your account. Please try again.",
+      },
+      { status: 500 },
+    )
   }
 }
 

@@ -1,6 +1,6 @@
 import { cookies } from "next/headers"
 import { verify, sign } from "jsonwebtoken"
-import { compare } from "bcrypt"
+import { compare, hash } from "bcrypt"
 
 import { prisma } from "@/lib/prisma"
 
@@ -50,12 +50,16 @@ export async function authenticateUser(email: string, password: string) {
   }
 
   // Verify password
-  const passwordMatch = await compare(password, user.password)
+  const passwordMatch = await compare(password, user.hashedPassword)
   if (!passwordMatch) {
     return null
   }
 
   return user
+}
+
+export async function hashPassword(password: string) {
+  return hash(password, 10)
 }
 
 export function generateAuthToken(user: { id: string; email: string }, rememberMe = false) {

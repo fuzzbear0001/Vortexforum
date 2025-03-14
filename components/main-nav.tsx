@@ -101,7 +101,9 @@ export function MainNav() {
     <div className="flex items-center justify-between py-4">
       <div className="flex items-center gap-6 md:gap-10">
         <Link href="/" className="flex items-center space-x-2" onClick={closeMenu}>
-          <span className="text-xl font-bold gradient-text">ForumApp</span>
+          <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">
+            ForumApp
+          </span>
         </Link>
         <nav className="hidden gap-6 md:flex">
           {routes.map((route) => (
@@ -165,7 +167,10 @@ export function MainNav() {
                   </Button>
                 </Link>
                 <Link href="/auth/signup">
-                  <Button size="sm" className="gradient-bg">
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                  >
                     Sign up
                   </Button>
                 </Link>
@@ -180,7 +185,7 @@ export function MainNav() {
         </Button>
       </div>
       {isMenuOpen && (
-        <div className="fixed inset-0 top-16 z-50 grid h-[calc(100vh-4rem)] grid-flow-row auto-rows-max overflow-auto bg-background p-6 md:hidden">
+        <div className="fixed inset-0 top-16 z-50 grid h-[calc(100vh-4rem)] grid-flow-row auto-rows-max overflow-auto bg-background/95 backdrop-blur-sm p-6 md:hidden">
           <nav className="flex flex-col gap-6">
             {routes.map((route) => (
               <Link

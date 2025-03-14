@@ -6,12 +6,14 @@ import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
+import { AlertCircle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { toast } from "@/components/ui/use-toast"
 
 const loginSchema = z.object({
@@ -25,6 +27,7 @@ type LoginFormValues = z.infer<typeof loginSchema>
 export default function LoginPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -37,6 +40,7 @@ export default function LoginPage() {
 
   async function onSubmit(data: LoginFormValues) {
     setIsLoading(true)
+    setError(null)
 
     try {
       const response = await fetch("/api/auth/login", {
@@ -63,28 +67,37 @@ export default function LoginPage() {
       // Redirect to home page after successful login
       router.push("/")
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Invalid email or password. Please try again.",
-        variant: "destructive",
-      })
+      setError(error.message || "Invalid email or password. Please try again.")
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="relative">
-      <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-gray-950">
-        <div className="absolute bottom-auto left-auto right-0 top-0 h-[500px] w-[500px] -translate-x-[30%] translate-y-[20%] rounded-full bg-primary opacity-10 blur-[80px]"></div>
+    <div className="relative min-h-screen">
+      {/* Gradient background */}
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-400 via-indigo-400 to-indigo-800 opacity-20 dark:opacity-30"></div>
+
+      {/* Animated shapes */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-purple-600 opacity-20 blur-3xl"></div>
+        <div className="absolute top-1/3 -left-40 h-96 w-96 rounded-full bg-indigo-600 opacity-20 blur-3xl"></div>
       </div>
-      <div className="container flex h-screen max-w-screen-md items-center justify-center">
-        <Card className="w-full max-w-md gradient-border">
+
+      <div className="container flex min-h-screen max-w-screen-md items-center justify-center py-12">
+        <Card className="w-full max-w-md border-none bg-white/80 backdrop-blur-md dark:bg-gray-950/80">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold">Log in</CardTitle>
             <CardDescription>Enter your credentials to access your account</CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
@@ -136,7 +149,11 @@ export default function LoginPage() {
                   )}
                 />
 
-                <Button type="submit" className="w-full gradient-bg" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                  disabled={isLoading}
+                >
                   {isLoading ? "Logging in..." : "Log in"}
                 </Button>
               </form>

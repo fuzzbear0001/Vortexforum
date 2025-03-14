@@ -30,7 +30,7 @@ export default function RootLayout({
               </div>
             </header>
             <main className="flex-1">{children}</main>
-            <footer className="border-t py-6 bg-gradient-to-r from-primary/10 to-primary/5">
+            <footer className="py-6 bg-gradient-to-r from-purple-600/10 to-indigo-600/5">
               <div className="container flex flex-col items-center justify-between gap-4 md:flex-row">
                 <p className="text-center text-sm text-muted-foreground">
                   &copy; {new Date().getFullYear()} Modern Forum Platform. All rights reserved.

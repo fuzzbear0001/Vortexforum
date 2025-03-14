@@ -73,10 +73,13 @@ export function PostCard({ post }: PostCardProps) {
   }
 
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-md gradient-border">
+    <Card className="overflow-hidden transition-all hover:shadow-lg border-none bg-white/80 backdrop-blur-md dark:bg-gray-950/80">
       <CardHeader className="flex flex-row items-center gap-4 p-4">
         <Avatar className="h-10 w-10 ring-2 ring-primary/20">
-          <AvatarImage src={post.author.image} alt={post.author.name} />
+          <AvatarImage
+            src={post.author.image || `https://api.dicebear.com/7.x/initials/svg?seed=${post.author.name}`}
+            alt={post.author.name}
+          />
           <AvatarFallback className="bg-primary/10 text-primary">
             {post.author.name.substring(0, 2).toUpperCase()}
           </AvatarFallback>
@@ -96,7 +99,9 @@ export function PostCard({ post }: PostCardProps) {
       <Link href={`/post/${post.id}`}>
         <CardContent className="p-4 pt-0">
           <h3 className="mb-2 text-xl font-bold tracking-tight">{post.title}</h3>
-          <div className="line-clamp-3 text-muted-foreground">{post.content}</div>
+          <div className="line-clamp-3 text-muted-foreground">
+            {post.content.replace(/\*\*|__|\*|_|`|#|\[.*?\]$$.*?$$|!\[.*?\]$$.*?$$/g, "")}
+          </div>
         </CardContent>
       </Link>
       <CardFooter className="flex items-center justify-between border-t p-4">

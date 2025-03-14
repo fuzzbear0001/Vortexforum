@@ -2,14 +2,15 @@
 
 import { useState } from "react"
 import { formatDistanceToNow } from "date-fns"
-import { Reply } from "lucide-react"
+import { Reply, AlertCircle } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { toast } from "@/components/ui/use-toast"
 import { VoteButtons } from "@/components/vote-buttons"
-import { useRouter } from "next/navigation"
 
 interface Comment {
   id: string
@@ -41,10 +42,11 @@ export function CommentSection({ postId, comments: initialComments }: CommentSec
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({})
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyContent, setReplyContent] = useState("")
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmitComment = async () => {
     if (!newComment.trim()) return
-
+    setError(null)
     setIsSubmitting(true)
 
     try {
@@ -56,6 +58,11 @@ export function CommentSection({ postId, comments: initialComments }: CommentSec
 
       if (!response.ok) {
         const data = await response.json()
+        if (response.status === 401) {
+          // Redirect to login if not authenticated
+          router.push(`/auth/login?redirect=/post/${postId}`)
+          return
+        }
         throw new Error(data.error || "Failed to post comment")
       }
 
@@ -70,11 +77,7 @@ export function CommentSection({ postId, comments: initialComments }: CommentSec
       setComments([data.comment, ...comments])
       router.refresh()
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to post comment. Please try again.",
-        variant: "destructive",
-      })
+      setError(error.message || "Failed to post comment. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -82,7 +85,7 @@ export function CommentSection({ postId, comments: initialComments }: CommentSec
 
   const handleSubmitReply = async (commentId: string) => {
     if (!replyContent.trim()) return
-
+    setError(null)
     setIsSubmitting(true)
 
     try {
@@ -94,6 +97,11 @@ export function CommentSection({ postId, comments: initialComments }: CommentSec
 
       if (!response.ok) {
         const data = await response.json()
+        if (response.status === 401) {
+          // Redirect to login if not authenticated
+          router.push(`/auth/login?redirect=/post/${postId}`)
+          return
+        }
         throw new Error(data.error || "Failed to post reply")
       }
 
@@ -108,11 +116,7 @@ export function CommentSection({ postId, comments: initialComments }: CommentSec
       setReplyingTo(null)
       router.refresh()
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to post reply. Please try again.",
-        variant: "destructive",
-      })
+      setError(error.message || "Failed to post reply. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -128,11 +132,19 @@ export function CommentSection({ postId, comments: initialComments }: CommentSec
   const toggleReplyForm = (commentId: string | null) => {
     setReplyingTo(commentId)
     setReplyContent("")
+    setError(null)
   }
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold tracking-tight">Comments</h2>
+
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       <div className="space-y-4">
         <Textarea
@@ -142,7 +154,11 @@ export function CommentSection({ postId, comments: initialComments }: CommentSec
           className="min-h-[100px] resize-y"
         />
         <div className="flex justify-end">
-          <Button onClick={handleSubmitComment} disabled={isSubmitting || !newComment.trim()} className="gradient-bg">
+          <Button
+            onClick={handleSubmitComment}
+            disabled={isSubmitting || !newComment.trim()}
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+          >
             {isSubmitting ? "Posting..." : "Post Comment"}
           </Button>
         </div>
@@ -152,7 +168,7 @@ export function CommentSection({ postId, comments: initialComments }: CommentSec
         {comments.length > 0 ? (
           comments.map((comment) => (
             <div key={comment.id} className="space-y-4">
-              <div className="rounded-lg border p-4 gradient-border">
+              <div className="rounded-lg p-4 border-none bg-white/80 backdrop-blur-md dark:bg-gray-950/80">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-8 w-8 ring-2 ring-primary/20">
                     <AvatarImage
@@ -214,6 +230,12 @@ export function CommentSection({ postId, comments: initialComments }: CommentSec
 
               {replyingTo === comment.id && (
                 <div className="ml-8 space-y-4">
+                  {error && (
+                    <Alert variant="destructive" className="mb-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
                   <Textarea
                     placeholder={`Reply to ${comment.author.name}...`}
                     value={replyContent}
@@ -228,7 +250,7 @@ export function CommentSection({ postId, comments: initialComments }: CommentSec
                       size="sm"
                       onClick={() => handleSubmitReply(comment.id)}
                       disabled={isSubmitting || !replyContent.trim()}
-                      className="gradient-bg"
+                      className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
                     >
                       {isSubmitting ? "Posting..." : "Post Reply"}
                     </Button>
@@ -239,7 +261,10 @@ export function CommentSection({ postId, comments: initialComments }: CommentSec
               {expandedReplies[comment.id] && comment.replies && comment.replies.length > 0 && (
                 <div className="ml-8 space-y-4">
                   {comment.replies.map((reply) => (
-                    <div key={reply.id} className="rounded-lg border p-4 gradient-border">
+                    <div
+                      key={reply.id}
+                      className="rounded-lg p-4 border-none bg-white/80 backdrop-blur-md dark:bg-gray-950/80"
+                    >
                       <div className="flex items-center gap-4">
                         <Avatar className="h-8 w-8 ring-2 ring-primary/20">
                           <AvatarImage
